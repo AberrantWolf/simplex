@@ -1,5 +1,3 @@
-// use std::collections::HashMap;
-
 use std::num::ParseIntError;
 
 use quick_xml::events::Event;
@@ -45,23 +43,7 @@ pub struct PlexUser {
     // hasPassword,
     pub auth_token: String,
     // subscription: Subscription
-    // extra: Vec<PlexUserData>,
 }
-
-// #[derive(Serialize, Deserialize, Debug)]
-// enum PlexUserData {
-//     subscription(HashMap<String, String>),
-//     roles(HashMap<String, String>),
-//     entitlements(HashMap<String, String>),
-//     profile_settings(HashMap<String, String>),
-//     providers(HashMap<String, String>),
-//     services(HashMap<String, String>),
-//     username(String),
-//     email(HashMap<String, String>),
-//     joined_at(HashMap<String, String>),
-//     #[serde(rename = "authentication-token")]
-//     authentication_token(HashMap<String, String>),
-// }
 
 impl PlexUser {
     // PUBLIC -- log user in and create Self on success
@@ -85,7 +67,6 @@ impl PlexUser {
 
         let text = response.text().await?;
         println!("{}", text);
-        // TODO: just parse the damn XML by hand -- I can manually ignore shit I don't care about
 
         Self::_from_xml_text(text).await
     }
