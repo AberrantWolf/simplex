@@ -113,7 +113,7 @@ pub(crate) fn apply_plex_client_identifier(headers: &mut HeaderMap) {
 
 lazy_static! {
     pub(crate) static ref REGEX_SET: RegexSet =
-        RegexSet::new(&[
+        RegexSet::new([
             r#"(email="[a-z]+@[a-z]+.[a-z]+)"#,
             r#"(id="\d+")"#,
             r#"(uuid="\w+")"#,

@@ -103,20 +103,10 @@ impl PlexUser {
     /// Builds a [`PlexUser`] using Regexes and String-matching, rather than the
     /// [`from_xml_text()`]'s line-by-line approach.
     pub fn _build_with_regex(xml: &str) -> Result<Self> {
-        // //TODO: lazy static this -- it's bad if they're re-compiled in a loop.
-        // let set = RegexSet::new(&[
-        //     r#"(email="[a-z]+@[a-z]+.[a-z]+)"#,
-        //     r#"(id="\d+")"#,
-        //     r#"(uuid="\w+")"#,
-        //     r#"(username="\w+")"#,
-        //     r#"(title="\w+")"#,
-        //     r#"(authToken="\w+")"#, //NOTE: there's many.. variants of this?
-        // ])?;
-
         let regexes: Vec<_> = REGEX_SET
             .patterns()
             // .into_par_iter() // t1.elapsed().as_nanos() = 2459129
-            .into_iter() // t1.elapsed().as_nanos() = 1602265
+            .iter() // t1.elapsed().as_nanos() = 1602265
             .map(|pat| Regex::new(pat).unwrap())
             .collect();
 
@@ -125,10 +115,10 @@ impl PlexUser {
         };
 
         REGEX_SET
-            .matches(&xml)
-            .into_iter()
+            .matches(xml)
+            .iter()
             .map(|match_idx| &regexes[match_idx])
-            .flat_map(|pat| pat.find(&xml))
+            .flat_map(|pat| pat.find(xml))
             .for_each(|res| {
                 _ = pu.add(res.as_str());
             });
