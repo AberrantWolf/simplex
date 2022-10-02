@@ -1,2 +1,5 @@
 /target
 login_info*
+*.lock
+**/*.rs.bk
+Cargo.lock
