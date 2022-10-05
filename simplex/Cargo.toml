@@ -13,3 +13,6 @@ serde = {version = "1", features=["derive"]}
 serde_json = "1"
 suplex = {path = "../suplex"}
 tokio = {version = "1", features = ["full"]}
+
+xml_struct = {path = "../xml_struct"}
+xml_struct_derive = {path = "../xml_struct_derive"}

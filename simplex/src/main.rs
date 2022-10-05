@@ -6,8 +6,11 @@ use serde::{Deserialize, Serialize};
 use serde_json::from_str;
 use serde_json::to_string;
 use std::fs;
+use suplex::plex_server::PlexServer;
 
 use suplex::plex_user::PlexUser;
+
+use xml_struct::XmlStruct;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct LoginInfo {
@@ -156,10 +159,12 @@ impl SimPlexApp {
 pub fn main() -> Result<()> {
     println!("I am SimPlex!");
 
-    let login_file_data = fs::read_to_string("login_info.json")?;
-    let login_info: LoginInfo = from_str(&login_file_data)?;
+    // let login_file_data = fs::read_to_string("login_info.json")?;
+    // let login_info: LoginInfo = from_str(&login_file_data)?;
 
-    SimPlexApp::run(Settings::with_flags(login_info))?;
+    // SimPlexApp::run(Settings::with_flags(login_info))?;
+
+    PlexServer::from_xml("".into());
 
     Ok(())
 }

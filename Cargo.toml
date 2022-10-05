@@ -5,4 +5,6 @@ resolver = "2"
 members = [
     "suplex",
     "simplex",
+    "xml_struct",
+    "xml_struct_derive",
 ]

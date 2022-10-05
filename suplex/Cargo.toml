@@ -16,3 +16,6 @@ tokio = {version = "1"}
 thiserror = "1.0"
 regex = "1.6.0"
 lazy_static = "1.4.0"
+
+xml_struct = {path = "../xml_struct"}
+xml_struct_derive = {path = "../xml_struct_derive"}
