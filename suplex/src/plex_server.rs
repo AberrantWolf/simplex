@@ -11,6 +11,7 @@ use crate::SuplexError;
 // trace_macros!(true);
 
 #[derive(Default, Debug, Clone, XmlStruct)]
+#[xmlElement = b"server"]
 pub struct PlexServer {
     first_field: String,
     another_field: u64,
