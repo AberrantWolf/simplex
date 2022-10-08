@@ -1,7 +1,7 @@
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::quote;
-use syn::{Attribute, Field, Ident, LitByteStr, LitStr};
+use syn::{Attribute, Field, Ident, LitByteStr};
 
 #[proc_macro_derive(XmlStruct, attributes(xmlElement, xmlName))]
 pub fn xml_struct_derive(input: TokenStream) -> TokenStream {

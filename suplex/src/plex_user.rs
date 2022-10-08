@@ -1,10 +1,7 @@
 //!
 //! Suplex `PlexUser`
 //!
-use crate::util::{
-    apply_plex_client_identifier, apply_plex_product, apply_plex_version, Result, REGEX_SET,
-};
-use crate::{build_plex_user_add_fn, xml_match_attrs, SuplexError};
+use crate::util::{apply_plex_client_identifier, apply_plex_product, apply_plex_version, Result};
 
 use quick_xml::events::Event;
 use quick_xml::reader::Reader;

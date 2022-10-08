@@ -4,13 +4,9 @@ use iced::settings::Settings;
 use iced::{executor, Alignment, Command, Length};
 use serde::{Deserialize, Serialize};
 use serde_json::from_str;
-use serde_json::to_string;
 use std::fs;
-use suplex::plex_server::PlexServer;
 
 use suplex::plex_user::PlexUser;
-
-use xml_struct::XmlStruct;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct LoginInfo {
