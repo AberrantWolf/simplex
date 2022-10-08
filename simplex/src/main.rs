@@ -5,6 +5,7 @@ use iced::{executor, Alignment, Command, Length};
 use serde::{Deserialize, Serialize};
 use serde_json::from_str;
 use std::fs;
+use suplex::plex_server::PlexServer;
 
 use suplex::plex_user::PlexUser;
 
@@ -19,6 +20,7 @@ struct LoginInfo {
 
 #[derive(Debug, Clone)]
 enum SimPlexMessage {
+    Pass,
     LoginUsernameChanged(String),
     LoginPasswordChanged(String),
     DoLogIn,
@@ -41,13 +43,31 @@ impl Application for SimPlexApp {
     type Flags = LoginInfo;
 
     fn new(flags: Self::Flags) -> (Self, Command<Self::Message>) {
-        (
-            Self {
-                state: AppState::Login,
-                user_info: flags,
-            },
-            Command::none(),
-        )
+        if let None = flags.auth_token {
+            // Go to a "logging in" state
+            // Use https://plex.tv/users/account to get account info (and verify the token is valid)
+            (
+                Self {
+                    state: AppState::Login,
+                    user_info: flags,
+                },
+                Command::none(),
+            )
+        } else {
+            let user_info = PlexUser {
+                username: flags.username.clone(),
+                auth_token: flags.auth_token.as_ref().unwrap().clone(),
+                ..Default::default()
+            };
+            let token = user_info.auth_token.clone();
+            (
+                Self {
+                    state: AppState::MainView(user_info),
+                    user_info: flags,
+                },
+                Command::perform(PlexServer::query_servers(token), |_| SimPlexMessage::Pass),
+            )
+        }
     }
 
     fn title(&self) -> String {
@@ -56,6 +76,7 @@ impl Application for SimPlexApp {
 
     fn update(&mut self, message: Self::Message) -> iced::Command<Self::Message> {
         match message {
+            SimPlexMessage::Pass => Command::none(),
             SimPlexMessage::LoginUsernameChanged(s) => {
                 self.user_info.username = s;
                 Command::none()
@@ -73,12 +94,15 @@ impl Application for SimPlexApp {
             ),
             SimPlexMessage::LoginResult(login_opt) => {
                 if let Some(user) = login_opt {
+                    let token = user.auth_token.clone();
+
                     self.user_info.auth_token = Some(user.auth_token.clone());
                     self.state = AppState::MainView(user);
+                    Command::perform(PlexServer::query_servers(token), |_| SimPlexMessage::Pass)
                 } else {
                     println!("Error logging in.");
+                    Command::none()
                 }
-                Command::none()
             }
         }
     }
