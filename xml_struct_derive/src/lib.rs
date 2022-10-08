@@ -1,9 +1,9 @@
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::quote;
-use syn::{Attribute, Ident, LitByteStr};
+use syn::{Attribute, Field, Ident, LitByteStr, LitStr};
 
-#[proc_macro_derive(XmlStruct, attributes(xmlElement))]
+#[proc_macro_derive(XmlStruct, attributes(xmlElement, xmlName))]
 pub fn xml_struct_derive(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
 
@@ -20,6 +20,33 @@ fn filter_supported_attribute_paths(attr: &&Attribute) -> SupportedAttributes {
         return SupportedAttributes::XmlElement;
     }
     SupportedAttributes::Nothing
+}
+
+fn filter_xml_name(field: &Field) -> String {
+    for attr in &field.attrs {
+        if attr.path.is_ident("xmlName") {
+            if let Ok(meta) = attr.parse_meta() {
+                match meta {
+                    syn::Meta::Path(_) => unimplemented!(),
+                    syn::Meta::List(_) => unimplemented!(),
+                    syn::Meta::NameValue(name_value) => {
+                        return match name_value.lit {
+                            syn::Lit::Str(s) => s.value(),
+                            syn::Lit::ByteStr(s) => String::from_utf8(s.value()).unwrap(),
+                            syn::Lit::Byte(_) => unimplemented!(),
+                            syn::Lit::Char(_) => unimplemented!(),
+                            syn::Lit::Int(_) => unimplemented!(),
+                            syn::Lit::Float(_) => unimplemented!(),
+                            syn::Lit::Bool(_) => unimplemented!(),
+                            syn::Lit::Verbatim(_) => unimplemented!(),
+                        };
+                    }
+                }
+            }
+        }
+    }
+
+    format!("{}", &field.ident.as_ref().unwrap())
 }
 
 fn impl_xml_data(ast: syn::DeriveInput) -> TokenStream {
@@ -59,19 +86,19 @@ fn impl_xml_data(ast: syn::DeriveInput) -> TokenStream {
         }
     });
 
-    // let container_element_name = container_elem_name_string.as_bytes();
-
     match data {
         syn::Data::Struct(struct_data) => {
             let fields = &struct_data.fields;
             match &fields {
                 syn::Fields::Named(named_fields) => {
                     let field_iter = named_fields.named.iter();
-                    let field_idents: Vec<&Ident> =
-                        field_iter.map(|f| f.ident.as_ref().unwrap()).collect();
+                    let (field_idents, field_names): (Vec<&Ident>, Vec<String>) = field_iter
+                        .map(|f| (f.ident.as_ref().unwrap(), filter_xml_name(f)))
+                        .unzip();
+
                     let gen = quote! {
                         impl XmlStruct for #name {
-                            fn from_xml(xml_string: String) -> Result<Self, XmlStructError> {
+                            fn from_xml(xml_string: String) -> xml_struct::Result<Self> {
                                 let mut reader = Reader::from_str(xml_string.as_str());
                                 let mut result = Self::default();
 
@@ -81,15 +108,16 @@ fn impl_xml_data(ast: syn::DeriveInput) -> TokenStream {
                                         Ok(Event::Eof) => break,
                                         Ok(Event::Start(e)) => {
                                             if let #container_elem_name_string = e.name().as_ref() {
-                                                #(if let Some(attr) = e.try_get_attribute(stringify!(#field_idents))? {
+                                                #(if let Some(attr) = e.try_get_attribute(#field_names)? {
                                                     result.#field_idents = attr.unescape_value()?.to_string().parse()?;
-                                                })else *
+                                                    println!("Found {}", stringify!(#field_idents));
+                                                })*
                                             }
                                         }
                                         _ => (),
                                     }
                                 }
-                                Err(XmlStructError::Temp)
+                                Ok(result)
                             }
                         }
                     };

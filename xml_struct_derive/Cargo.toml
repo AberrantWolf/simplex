@@ -8,6 +8,7 @@ edition = "2021"
 proc-macro = true
 
 [dependencies]
+xml_struct = {path = "../xml_struct"}
 proc-macro2 = "1"
 quote = "1"
 syn = "1"

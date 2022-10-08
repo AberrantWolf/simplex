@@ -21,9 +21,11 @@ pub enum XmlStructError {
     },
 }
 
+pub type Result<T> = std::result::Result<T, XmlStructError>;
+
 pub trait XmlStruct
 where
     Self: Sized + Default,
 {
-    fn from_xml(xml_string: String) -> Result<Self, XmlStructError>;
+    fn from_xml(xml_string: String) -> Result<Self>;
 }

@@ -159,12 +159,12 @@ impl SimPlexApp {
 pub fn main() -> Result<()> {
     println!("I am SimPlex!");
 
-    // let login_file_data = fs::read_to_string("login_info.json")?;
-    // let login_info: LoginInfo = from_str(&login_file_data)?;
+    let login_file_data = fs::read_to_string("login_info.json")?;
+    let login_info: LoginInfo = from_str(&login_file_data)?;
 
-    // SimPlexApp::run(Settings::with_flags(login_info))?;
+    SimPlexApp::run(Settings::with_flags(login_info))?;
 
-    PlexServer::from_xml("".into());
+    // PlexServer::from_xml("".into());
 
     Ok(())
 }

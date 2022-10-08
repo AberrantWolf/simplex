@@ -8,10 +8,12 @@ use crate::{build_plex_user_add_fn, xml_match_attrs, SuplexError};
 
 use quick_xml::events::Event;
 use quick_xml::reader::Reader;
-use regex::Regex;
 use reqwest::header::HeaderMap;
+use xml_struct::{XmlStruct, XmlStructError};
+use xml_struct_derive::*;
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, XmlStruct)]
+#[xmlElement = "user"]
 pub struct PlexUser {
     pub id: u64,
     pub uuid: String,
@@ -19,14 +21,14 @@ pub struct PlexUser {
     // joined_at,
     pub username: String,
     pub title: String,
-    // thumb,
+    pub thumb: String,
     // hasPassword,
+    #[xmlName = "authToken"]
     pub auth_token: String,
     // subscription: Subscription
 }
 
 impl PlexUser {
-    // PUBLIC -- log user in and create Self on success
     pub async fn authenticate<T>(username: T, password: T) -> Option<Self>
     where
         T: Into<String> + std::fmt::Display,
@@ -34,8 +36,7 @@ impl PlexUser {
         let result = Self::_try_login(&username, &password).await;
         if let Ok(text) = result {
             println!("{}", text);
-            if let Ok(result) = Self::_from_xml_text(text).await {
-                //if let Ok(Self::build_with_regex(&text)){ // Absolutely not faster :(
+            if let Ok(result) = Self::from_xml(text) {
                 Some(result)
             } else {
                 // TODO: Log the error...?
@@ -53,12 +54,6 @@ impl PlexUser {
             None
         }
     }
-
-    // This will build an add method, which add's &str to a PlexUser's appropriate field by
-    // matching substrings.
-    build_plex_user_add_fn!(
-        "email", email, "username", username, "title", title, "en", auth_token, "uuid", uuid
-    );
 
     async fn _try_login<T>(username: &T, password: &T) -> Result<String>
     where
@@ -79,49 +74,5 @@ impl PlexUser {
             .await?;
 
         Ok(response.text().await?)
-    }
-
-    // INNER -- create Self from XML text String
-    async fn _from_xml_text(text: String) -> Result<Self> {
-        let mut reader = Reader::from_str(text.as_str());
-        let mut plex_user = PlexUser {
-            ..Default::default()
-        };
-        loop {
-            match reader.read_event() {
-                Err(e) => return Err(SuplexError::XmlError { source: e }),
-                Ok(Event::Eof) => break,
-                Ok(Event::Start(e)) => {
-                    xml_match_attrs!(plex_user, e, "id", "uuid", "username", "authToken")
-                }
-                _ => (),
-            }
-        }
-        Ok(plex_user)
-    }
-    // INNER -- create Self from XML text String
-    /// Builds a [`PlexUser`] using Regexes and String-matching, rather than the
-    /// [`from_xml_text()`]'s line-by-line approach.
-    pub fn _build_with_regex(xml: &str) -> Result<Self> {
-        let regexes: Vec<_> = REGEX_SET
-            .patterns()
-            // .into_par_iter() // t1.elapsed().as_nanos() = 2459129
-            .iter() // t1.elapsed().as_nanos() = 1602265
-            .map(|pat| Regex::new(pat).unwrap())
-            .collect();
-
-        let mut pu = PlexUser {
-            ..Default::default()
-        };
-
-        REGEX_SET
-            .matches(xml)
-            .iter()
-            .map(|match_idx| &regexes[match_idx])
-            .flat_map(|pat| pat.find(xml))
-            .for_each(|res| {
-                _ = pu.add(res.as_str());
-            });
-        Ok(pu)
     }
 }
